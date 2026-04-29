@@ -1,0 +1,12 @@
+*.class
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# Build tools
+target/
+build/
+out/
+bin/
