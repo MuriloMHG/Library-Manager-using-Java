@@ -2,7 +2,7 @@ package library.domain;
 
 public class Book
 {
-    private int id;
+    private long id;
     private String title;
     private String author;
     private String isbn;
@@ -10,7 +10,7 @@ public class Book
     
     public Book(){}
 
-    public Book(int id, String title, String author, String isbn, int totalAvailable)
+    public Book(long id, String title, String author, String isbn, int totalAvailable)
     {
         this.id = id;
         this.title = title;
@@ -23,7 +23,7 @@ public class Book
     {
         if (totalAvailable <= 0)
         {
-            throw new IllegalStateException("Book unavalilabe to Loan !");
+            throw new IllegalStateException("Book unavailable for loan.");
         }
         totalAvailable--;
     }
@@ -33,7 +33,7 @@ public class Book
         totalAvailable++;
     }
 
-    public int getId(){return id;}
+    public long getId(){return id;}
     public String getTitle(){return title;}
     public String getAuthor(){return author;}
     public String getIsbn(){return isbn;}
@@ -43,12 +43,12 @@ public class Book
 
     @Override
     public String toString(){
-        return "Book{"+
+        return "Book{" +
                 "id=" + id +
-                "title=" + title +
-                "author=" + author +
-                "isbn=" + isbn +
-                "totalAvailable=" + totalAvailable +
+                ", title=" + title +
+                ", author=" + author +
+                ", isbn=" + isbn +
+                ", totalAvailable=" + totalAvailable +
                 "}";
 
     }

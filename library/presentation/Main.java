@@ -1,30 +1,50 @@
 package library.presentation;
 
-import library.application.LoanService;
 import library.domain.Book;
 import library.domain.Loan;
 import library.domain.User;
 import library.domain.UserSituation;
-import library.infrastructure.BookRepository;
-import library.infrastructure.LoanRepository;
-import library.infrastructure.UserRepository;
+import library.domain.porta.entry.LoanUseCase;
+import library.domain.porta.exit.BookRepositoryPort;
+import library.domain.porta.exit.LoanRepositoryPort;
+import library.domain.porta.exit.NotificationPort;
+import library.domain.porta.exit.UserRepositoryPort;
+import library.domain.service.LoanService;
+import library.infrastructure.adapter.BookRepositoryCsv;
+import library.infrastructure.adapter.BookRepositoryInMemory;
+import library.infrastructure.adapter.ConsoleNotification;
+import library.infrastructure.adapter.LoanRepositoryInMemory;
+import library.infrastructure.adapter.UserRepositoryInMemory;
 
 public class Main {
-    public static void main(String[] args) {
-        BookRepository bookRepository = new BookRepository();
-        UserRepository userRepository = new UserRepository();
-        LoanRepository loanRepository = new LoanRepository();
 
-        LoanService loanService = new LoanService(
+    public static void main(String[] args) {
+        System.out.println("=== STAGE 2: HEXAGONAL ARCHITECTURE ===");
+
+        runWithInMemoryAdapters();
+
+        System.out.println("\n-------------------------------------\n");
+
+        runWithCsvBookAdapter();
+    }
+
+    private static void runWithInMemoryAdapters() {
+        System.out.println("Running with in-memory adapters...");
+
+        BookRepositoryPort bookRepository = new BookRepositoryInMemory();
+        UserRepositoryPort userRepository = new UserRepositoryInMemory();
+        LoanRepositoryPort loanRepository = new LoanRepositoryInMemory();
+        NotificationPort notification = new ConsoleNotification();
+
+        LoanUseCase loanUseCase = new LoanService(
                 loanRepository,
                 bookRepository,
-                userRepository
+                userRepository,
+                notification
         );
 
-        System.out.println("=== LIBRARY MANAGEMENT SYSTEM ===");
-
         Book book = new Book(
-                1,
+                1L,
                 "Clean Code",
                 "Robert C. Martin",
                 "9780132350884",
@@ -41,39 +61,63 @@ public class Main {
         bookRepository.save(book);
         userRepository.save(user);
 
-        System.out.println("\nBook registered:");
-        System.out.println(book);
-
-        System.out.println("\nUser registered:");
-        System.out.println(user);
-
-        Loan loan = loanService.createLoan(
+        Loan loan = loanUseCase.createLoan(
                 user.getId(),
-                (long) book.getId()
+                book.getId()
         );
 
-        System.out.println("\nLoan created:");
+        System.out.println("Loan created:");
         System.out.println(loan);
 
-        System.out.println("\nAvailable quantity after loan:");
-        System.out.println(book.getTotalAvailable());
+        loanUseCase.registerReturn(loan.getId());
 
-        System.out.println("\nActive loans:");
-        loanService.listActiveLoans()
-                .forEach(System.out::println);
+        System.out.println("Return registered:");
+        System.out.println(loan);
+    }
 
-        loanService.registerReturn(loan.getId());
+    private static void runWithCsvBookAdapter() {
+        System.out.println("Running with CSV adapter for books...");
 
-        System.out.println("\nReturn registered.");
+        BookRepositoryPort bookRepository = new BookRepositoryCsv("books.csv");
+        UserRepositoryPort userRepository = new UserRepositoryInMemory();
+        LoanRepositoryPort loanRepository = new LoanRepositoryInMemory();
+        NotificationPort notification = new ConsoleNotification();
 
-        System.out.println("\nLoan after return:");
+        LoanUseCase loanUseCase = new LoanService(
+                loanRepository,
+                bookRepository,
+                userRepository,
+                notification
+        );
+
+        Book book = new Book(
+                2L,
+                "Domain-Driven Design",
+                "Eric Evans",
+                "9780321125217",
+                1
+        );
+
+        User user = new User(
+                2L,
+                "Ana Souza",
+                "ana@email.com",
+                UserSituation.ACTIVE
+        );
+
+        bookRepository.save(book);
+        userRepository.save(user);
+
+        Loan loan = loanUseCase.createLoan(
+                user.getId(),
+                book.getId()
+        );
+
+        System.out.println("Loan created using book stored in CSV:");
         System.out.println(loan);
 
-        System.out.println("\nAvailable quantity after return:");
-        System.out.println(book.getTotalAvailable());
-
-        System.out.println("\nActive loans after return:");
-        loanService.listActiveLoans()
-                .forEach(System.out::println);
+        System.out.println("Books persisted in CSV:");
+        bookRepository.findAll().forEach(System.out::println);
     }
 }
+

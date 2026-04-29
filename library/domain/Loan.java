@@ -50,6 +50,12 @@ public class Loan {
         return situation == LoanSituation.ACTIVE;
     }
 
+    public void markOverdue() {
+        if (situation == LoanSituation.ACTIVE) {
+            situation = LoanSituation.OVERDUE;
+        }
+    }
+
     @Override
     public String toString() {
         return "Loan{" +
